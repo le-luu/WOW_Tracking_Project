@@ -1,0 +1,7 @@
+*.csv
+*.ipynb
+*.twbr
+*.html
+*.log
+*.twb
+.env
