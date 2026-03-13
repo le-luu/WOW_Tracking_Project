@@ -5,3 +5,5 @@
 *.log
 *.twb
 .env
+*.json
+get_token.py
