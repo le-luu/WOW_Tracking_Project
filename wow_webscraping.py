@@ -13,6 +13,8 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
+import logging
+from datetime import datetime
 
 def webscrape_data(url):
 
@@ -70,7 +72,7 @@ def webscrape_data(url):
 
 def historic_data(MD_TOKEN):
     con = duckdb.connect('md:?motherduck_token=' + MD_TOKEN)
-    his_df = con.sql("SELECT * FROM wow_data.wow_historic_data").df()
+    his_df = con.sql("SELECT * FROM wow_data.wow_historic_data ORDER BY Year DESC, Week DESC").df()
     con.close()
     his_df['Year_Week'] = his_df['Year'].astype(str) +  his_df['Week'].astype(str).str.zfill(2)
     his_df['Year_Week'] = his_df['Year_Week'].astype(int)
@@ -117,7 +119,7 @@ def load_incremental_models_to_warehouse(MD_TOKEN,historical_data_df, webscraped
                             INSERT INTO wow_data.wow_historic_data
                             SELECT * FROM arrow_table
                             """)
-        print("New Data Successfully inserted into Datawarehouse")
+        print("\nNew Data Successfully inserted into Datawarehouse")
 
 def return_data_from_warehouse(MD_TOKEN):
     con = duckdb.connect('md:?motherduck_token=' + MD_TOKEN)
@@ -152,41 +154,86 @@ def upload_to_google_drive(gd_service, GD_FOLDER_ID, df, file_name):
         mimetype="text/csv"
     )
 
-    file_metadata = {
-        "name": file_name,
-        "parents": [GD_FOLDER_ID]
-    }
+    #Check if the file existed in the folder in google drive
+    query = f"name='{file_name}' and '{GD_FOLDER_ID}' in parents and trashed=false"
 
-    uploaded_file = service.files().create(
-        body=file_metadata,
-        media_body=media,
-        fields="id, name, webViewLink",
-        supportsAllDrives=True
+    results = service.files().list(
+        q=query,
+        fields="files(id,name)",
+        supportsAllDrives=True,
+        includeItemsFromAllDrives=True
     ).execute()
 
-    print(f"Successfully uploaded '{file_name}' with ID: {uploaded_file['id']}")
-    print(f"View file: {uploaded_file.get('webViewLink', 'No link available')}")
+    files=results.get("files",[])
+
+    if files:
+        file_id = files[0]["id"]
+
+        uploaded_file = service.files().update(
+            fileId=file_id,
+            media_body=media,
+            fields="id, name, webViewLink",
+            supportsAllDrives=True
+        ).execute()
+
+        print(f"Updated existing file '{file_name}' (ID: {file_id})")
+
+    else: #else if the file doesn't exist in the folder => create a new file with file_name
+        file_metadata = {
+            "name": file_name,
+            "parents": [GD_FOLDER_ID]
+        }
+
+        uploaded_file = service.files().create(
+            body=file_metadata,
+            media_body=media,
+            fields="id, name, webViewLink",
+            supportsAllDrives=True
+        ).execute()
+
+        print(f"Successfully uploaded '{file_name}' with ID: {uploaded_file['id']}")
+        
+    print(f"Link to the file: {uploaded_file.get('webViewLink', 'No link available')}")
     return uploaded_file.get("id")
 
 
 def main():
+
+    os.makedirs('logs',exist_ok=True)
+    timestamp = datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+    log_path = os.path.join(os.getcwd(), "logs")
+    file_name = f"logging_{timestamp}.log"
+    log_file_name = os.path.join(log_path, file_name)
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        filename=log_file_name
+    )
+    logger = logging.getLogger()
+
     load_dotenv()
     MD_TOKEN = os.getenv("MD_TOKEN")
     url = "https://www.workout-wednesday.com/latest/"
+
+    logger.info("====================Start the Program============================")
 
     print("===================================================")
     historical_data_df = historic_data(MD_TOKEN)
     print("Historic Data:")
     print(historical_data_df.head())
+    logger.info("Finished Loading Historical Data from Data Warehouse")
+    
 
     print("===================================================")
     print("Webscraped Data:")
+    logger.info("====================Start Webscraping Data============================")
     webscraped_data_df = webscrape_data(url)
     #========================================================================
-
-
+    logger.info("====> Finish Webscraping Data!")
+    logger.info("====================Start Transforming Data============================")
     webscraped_data_df = transform_webscrape_data(webscraped_data_df)
-
+    logger.info("====> Finish Transforming the Webscraped Data!")
     # print("historical data here: ")
     # print(historical_data_df.head())
 
@@ -194,23 +241,30 @@ def main():
     print("webscraped data after transformation here: ")
     print(webscraped_data_df.head())
 
-    print("Incremental models. Load data into warehouse:")
+    # print("Incremental models. Load data into warehouse:")
+    logger.info("====================Start Checking Incremental Rows============================")
     load_incremental_models_to_warehouse(MD_TOKEN, historical_data_df, webscraped_data_df)
-    
+    logger.info("====> Succesffuly loading incremetal data into the warehouse")
 
     data_from_wh_df = return_data_from_warehouse(MD_TOKEN)
+    print("===================================================")
     print("Data from warehouse:")
+    print("===================================================")
     print(data_from_wh_df.head())
+    logger.info("====> Successfully query data source from the warehouse")
 
     #===============================================================
     GD_TOKEN_FILE = "token.json"
     SCOPES = ["https://www.googleapis.com/auth/drive.file"]
     GD_FOLDER_ID = os.getenv("GD_FOLDER_ID")
 
+    logger.info("====================Start Creating Google Drive Service ============================")
     gd_service = get_drive_service(GD_TOKEN_FILE, SCOPES)
+    logger.info("====> Successfully authorizing the credentials and create a service")
 
+    logger.info("====================Start Loading Data into Google Drive============================")
     upload_to_google_drive(gd_service, GD_FOLDER_ID, data_from_wh_df, "wow_historic_data.csv")
-
+    logger.info("====> Successfully loading dataset on Google Drive Folder")
 
 if __name__ == "__main__":
     main()

@@ -7,3 +7,4 @@
 .env
 *.json
 get_token.py
+logs
