@@ -3,6 +3,8 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.action_chains import ActionChains
 import os
 import io
 import pandas as pd
@@ -18,8 +20,14 @@ from datetime import datetime
 
 def webscrape_data(url):
 
-    options = webdriver.ChromeOptions()
-    driver = webdriver.Chrome(options=options)
+    # options = webdriver.ChromeOptions()
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")            # run Chrome without GUI
+    chrome_options.add_argument("--no-sandbox")          # required on Linux CI
+    chrome_options.add_argument("--disable-dev-shm-usage") # avoid /dev/shm issues
+    chrome_options.add_argument("--disable-gpu")         # optional
+    chrome_options.add_argument("--window-size=1920,1080") # optional, set viewport
+    driver = webdriver.Chrome(options=chrome_options)
 
     driver.get(url)
     actions = ActionChains(driver)
