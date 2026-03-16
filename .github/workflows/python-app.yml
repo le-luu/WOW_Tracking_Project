@@ -28,11 +28,26 @@ jobs:
     - name: Python version
       run: python --version
       
+    - name: Install Chrome & system packages
+      run: |
+        echo "📦 Installing Chrome & system dependencies..."
+        sudo apt update
+        sudo apt install -y wget unzip xvfb libxi6 libgconf-2-4
+        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+        sudo apt install -y ./google-chrome-stable_current_amd64.deb
+      
     - name: Install dependencies
       run: |
         echo "=> Installing Python dependencies..."
+        pip install --upgrade pip
         pip install -r requirements.txt
         echo "Successfully installed all dependencies"
+        
+    - name: Install ChromeDriver
+      run: |
+        echo "🔧 Installing ChromeDriver..."
+        pip install chromedriver-binary selenium
+        echo "✅ ChromeDriver installed"
         
     - name: Set up token.json
       run: |
