@@ -15,18 +15,37 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Log Start
+      run: echo "Starting WOW data pipeline"
+      
     - name: Set up Python 3.11
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v5
       with:
         python-version: "3.11"
+
+    - name: Python version
+      run: python --version
+      
     - name: Install dependencies
       run: |
+        echo "=> Installing Python dependencies..."
         pip install -r requirements.txt
+        echo "Successfully installed all dependencies"
+        
     - name: Set up token.json
       run: |
-        echo "${{secrets.GD_TOKEN_JSON}}" > token.json
+        echo "Creating Google Drive token file"
+        echo '${{secrets.GD_TOKEN_JSON}}' > token.json
+        echo "token.json is created"
+        
     - name: Run the data pipeline
       env:
         MD_TOKEN: ${{secrets.MD_TOKEN}}
         GD_FOLDER_ID: ${{secrets.GD_FOLDER_ID}}
-      run: python wow_webscraping.py
+      run: |
+        echo "Running the Python wow_webscraping.py file"
+        python wow_webscraping.py
+        echo "Finished running the Python script"
+
+    - name: Pipeline Finished
+      run: echo "Finished running the data pipeline"
