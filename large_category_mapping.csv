@@ -1,0 +1,104 @@
+﻿Category,Large Category
+Interactivity,Interactivity/Actions
+Actions,Interactivity/Actions
+Animations,Interactivity/Actions
+Dynamic References,Interactivity/Actions
+DZV,Interactivity/Actions
+Filters,Interactivity/Actions
+Navigations,Interactivity/Actions
+Parameter,Interactivity/Actions
+Set,Interactivity/Actions
+Sheet Swapping,Interactivity/Actions
+Top N,Interactivity/Actions
+User Experience,Interactivity/Actions
+Viz Extensions,Interactivity/Actions
+Viz In Tooltip,Interactivity/Actions
+Map Layer,Spatial
+Area,Spatial
+Bivariate Map,Spatial
+Buffer,Spatial
+"Buffer, Map Layers",Spatial
+Distance,Spatial
+Mapping,Spatial
+Maps,Spatial
+Mark Layers,Spatial
+Spatial,Spatial
+Spatial Parameters,Spatial
+Aggregation,Calculations
+Calculations,Calculations
+"Dates, Order Of Operations, Table Calculations",Calculations
+Dynamic Calculations,Calculations
+LOD,Calculations
+"Lod Expressions, Table Calculations",Calculations
+Moving Calculation,Calculations
+Quick Lods,Calculations
+Ranking,Calculations
+Table Calculation,Calculations
+Annotation,Formatting
+Average Lines,Formatting
+Color,Formatting
+Containers,Formatting
+Custom Shapes,Formatting
+Custom Sort,Formatting
+Data Prep,Formatting
+Device Designer,Formatting
+Duration,Formatting
+Dynamic Axis Ranges,Formatting
+Dynamic Color Ranges,Formatting
+Emoji,Formatting
+Extension,Formatting
+Formatting,Formatting
+Guest Coach,Formatting
+Hard,Formatting
+Layout,Formatting
+Mobile,Formatting
+Pages,Formatting
+Reference Band,Formatting
+Reference Lines,Formatting
+Reporting,Formatting
+Area Chart,Chart Type
+Bar Chart,Chart Type
+Boxplots,Chart Type
+Bump Chart,Chart Type
+Chart Types,Chart Type
+Cohort,Chart Type
+Common Baseline,Chart Type
+Control Chart,Chart Type
+Custom Cohort,Chart Type
+Donut,Chart Type
+Dot Plot,Chart Type
+Dual Axis,Chart Type
+Gantt Chart,Chart Type
+Heatmap,Chart Type
+Hexbin,Chart Type
+Histogram,Chart Type
+Jitterfly,Chart Type
+Jitterplot,Chart Type
+Line Chart,Chart Type
+Marimekko,Chart Type
+Packed Bubble,Chart Type
+Pareto,Chart Type
+Pareto Chart,Chart Type
+Pie Chart,Chart Type
+Quadrant Chart,Chart Type
+Rocket Plot,Chart Type
+Scatterplot,Chart Type
+Slope Chart,Chart Type
+Small Multiple,Chart Type
+Small Multiples,Chart Type
+Spine Chart,Chart Type
+Stacked Bar,Chart Type
+Step Line,Chart Type
+Survey Data,Chart Type
+Tables,Chart Type
+Tile Map,Chart Type
+Tree Map,Chart Type
+Trellis Chart,Chart Type
+Unit Chart,Chart Type
+Waffle,Chart Type
+Waterfall,Chart Type
+Date Calculation,Date Time
+Dates,Date Time
+Fiscal Date,Date Time
+Time,Date Time
+Year Over Year,Date Time

@@ -115,6 +115,25 @@ def transform_webscrape_data(webscraped_data_df):
     webscraped_data_df.drop(columns=['categories','author_url','title_attribute'], inplace=True)
     #Order columns to match with the historical data
     webscraped_data_df = webscraped_data_df[['Category', 'Link', 'Title', 'Author', 'Year', 'Week', 'Year_Week']]
+    rules = {
+        'Interactivity':'#Interactivity|Interactivity',
+        'Map Layer': '#Maplayers|Map Layers',
+        'Color': 'Color|Color Formatting',
+        'Comparison':'Comparision|Comparison',
+        'DZV':'Dynamic Zone Visibility|Dzv',
+        'Heatmap':'Heat Map|Heatmap',
+        'LOD':'Level Of Detail|Lod Expressions|Lods',
+        'Parameter':'Parameter|Parameter Actions|Parameters',
+        'Scatterplot':'Scatter Plot|Scatterplot',
+        'Set':'Set Actions|Set Controls|Sets',
+        'Sheet Swapping':'Sheet Swapping|Sheeting Swapping',
+        'Small Multiple':'Small Multiple|Small Multiples',
+        'Table Calculation':'Table Calculation|Table Calculations',
+        'Waffle':'Waffle|Waffle Chart'
+    }
+    for group, pattern in rules.items():
+        webscraped_data_df.loc[webscraped_data_df['Category'].str.contains(pattern, case=False, na=False),'Category']=group
+
     return webscraped_data_df
 
 def load_incremental_models_to_warehouse(MD_TOKEN,historical_data_df, webscraped_data_df):
@@ -134,6 +153,7 @@ def return_data_from_warehouse(MD_TOKEN):
     df = con.sql("SELECT * FROM wow_data.wow_historic_data ORDER BY Year DESC, Week DESC").df()
     con.close()
     return df
+
 
 def get_drive_service(GD_TOKEN_FILE, SCOPES):
     creds = None
@@ -260,6 +280,10 @@ def main():
     print("===================================================")
     print(data_from_wh_df.head())
     logger.info("====> Successfully query data source from the warehouse")
+
+    category_mapping_df = pd.read_csv('large_category_mapping.csv')
+    data_from_wh_df = data_from_wh_df.merge(category_mapping_df, how='left', on='Category')
+    data_from_wh_df['Large Category'] = data_from_wh_df['Large Category'].fillna('Other/ Unknown')
 
     #===============================================================
     GD_TOKEN_FILE = "token.json"
