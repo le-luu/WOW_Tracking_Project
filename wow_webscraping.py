@@ -66,9 +66,13 @@ def webscrape_data(url):
         author = author_element.get_attribute("textContent").strip()
         author_url = author_element.get_attribute("href")
 
+        posted_date_div = post.find_element(By.CSS_SELECTOR, ".eael-posted-on time")
+        posted_date = posted_date_div.get_attribute("datetime")
+
         results.append({
             "categories": categories,
             "title": title,
+            "posted_date": posted_date,
             "url": url,
             "title_attribute": title_attr,
             "author": author,
@@ -110,11 +114,11 @@ def transform_webscrape_data(webscraped_data_df):
     'url': 'Link',
     'author': 'Author'}
     webscraped_data_df.rename(columns=column_rename_mapping, inplace=True)
-
+    webscraped_data_df['BI_tools'] = 'Tableau'
     #Drop some columns to match with the historical data
-    webscraped_data_df.drop(columns=['categories','author_url','title_attribute'], inplace=True)
+    webscraped_data_df.drop(columns=['categories','title_attribute'], inplace=True)
     #Order columns to match with the historical data
-    webscraped_data_df = webscraped_data_df[['Category', 'Link', 'Title', 'Author', 'Year', 'Week', 'Year_Week']]
+    webscraped_data_df = webscraped_data_df[['Category', 'Link', 'Title','posted_date', 'Author','author_url', 'Year', 'Week', 'Year_Week','BI_tools']]
     rules = {
         'Interactivity':'#Interactivity|Interactivity',
         'Map Layer': '#Maplayers|Map Layers',
