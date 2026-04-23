@@ -120,7 +120,7 @@ def transform_webscrape_data(webscraped_data_df):
 
     webscraped_data_df['posted_date'] = pd.to_datetime(webscraped_data_df['posted_date'])
     #Order columns to match with the historical data
-    webscraped_data_df = webscraped_data_df[['Category', 'Link', 'Title','posted_date', 'Author','author_url', 'Year', 'Week', 'Year_Week','BI_tools']]
+    webscraped_data_df = webscraped_data_df[['Category', 'Link', 'Title','posted_date','Year', 'Week', 'Author','author_url',  'Year_Week','BI_tools']]
     rules = {
         'Interactivity':'#Interactivity|Interactivity',
         'Map Layer': '#Maplayers|Map Layers',
