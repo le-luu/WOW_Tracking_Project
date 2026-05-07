@@ -91,7 +91,7 @@ def historic_data(MD_TOKEN):
     return his_df
 
 
-def transform_webscrape_data(webscraped_data_df):
+def transform_webscrape_data(webscraped_data_df, tool):
     #remove the brackets and quotes in the categories and strip whitespace. If Category is empty, replace with "Other"
     webscraped_data_df['Category'] = (
         webscraped_data_df['categories']
@@ -103,18 +103,26 @@ def transform_webscrape_data(webscraped_data_df):
 
     #Extract the year and week number from the url column and convert it to int
     webscraped_data_df['Year'] = webscraped_data_df['url'].str.extract(r'.*(\d{4}).*').astype(int)
-    webscraped_data_df['Week'] = webscraped_data_df['url'].str.extract(r'.*w(\d+)[tab|\/].*').astype(int)
-
+    #webscraped_data_df['Week'] = webscraped_data_df['url'].str.extract(r'.*w(\d+)[tab|\/].*').astype(int)
+    webscraped_data_df['Week'] = (
+        webscraped_data_df['url']
+        .str.extract(r'w(\d+)(?:tab|/)', expand=False)
+        .astype('Int64')
+    )
     #Create a Year_Week column by concatenating the Year and Week columns, with week number zero-padded to 2 digits
-    webscraped_data_df['Year_Week'] = webscraped_data_df['Year'].astype(str) + webscraped_data_df['Week'].astype(str).str.zfill(2)
-    webscraped_data_df['Year_Week'] = webscraped_data_df['Year_Week'].astype(int)
-
+    # webscraped_data_df['Year_Week'] = webscraped_data_df['Year'].astype(str) + webscraped_data_df['Week'].astype(str).str.zfill(2)
+    # webscraped_data_df['Year_Week'] = webscraped_data_df['Year_Week'].astype(int)
+    webscraped_data_df['Year_Week'] = (
+        webscraped_data_df['Year'] * 100
+        + webscraped_data_df['Week']
+    ).astype('Int64')
+    
     column_rename_mapping = {
     'title': 'Title',
     'url': 'Link',
     'author': 'Author'}
     webscraped_data_df.rename(columns=column_rename_mapping, inplace=True)
-    webscraped_data_df['BI_tools'] = 'Tableau'
+    webscraped_data_df['BI_tools'] = tool
     #Drop some columns to match with the historical data
     webscraped_data_df.drop(columns=['categories','title_attribute'], inplace=True)
 
@@ -142,7 +150,8 @@ def transform_webscrape_data(webscraped_data_df):
 
     return webscraped_data_df
 
-def load_incremental_models_to_warehouse(MD_TOKEN,historical_data_df, webscraped_data_df):
+def load_incremental_models_to_warehouse(MD_TOKEN,historical_data_df, webscraped_data_df, tool):
+    historical_data_df = historical_data_df[historical_data_df['BI_tools'] == tool]
     max_year_week = historical_data_df['Year_Week'].max()
     webscraped_data_df = webscraped_data_df[webscraped_data_df['Year_Week'] > max_year_week]
     webscraped_data_df = webscraped_data_df.drop(columns=['Year_Week']).reset_index(drop=True)
@@ -241,14 +250,16 @@ def main():
 
     logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(message)s",
+        format="%(asctime)s - %(name)s - [%(levelname)s] %(message)s",
         filename=log_file_name
     )
-    logger = logging.getLogger()
+    logger = logging.getLogger(__name__)
 
     load_dotenv()
     MD_TOKEN = os.getenv("MD_TOKEN")
     url = "https://www.workout-wednesday.com/latest/"
+
+    powerbi_url = 'https://www.workout-wednesday.com/power-bi-challenges/'
 
     logger.info("====================Start the Program============================")
 
@@ -263,22 +274,33 @@ def main():
     print("Webscraped Data:")
     logger.info("====================Start Webscraping Data============================")
     webscraped_data_df = webscrape_data(url)
-    #========================================================================
-    logger.info("====> Finish Webscraping Data!")
-    logger.info("====================Start Transforming Data============================")
-    webscraped_data_df = transform_webscrape_data(webscraped_data_df)
-    logger.info("====> Finish Transforming the Webscraped Data!")
-    # print("historical data here: ")
-    # print(historical_data_df.head())
 
-    print("===================================================")
-    print("webscraped data after transformation here: ")
-    print(webscraped_data_df.head())
 
-    # print("Incremental models. Load data into warehouse:")
-    logger.info("====================Start Checking Incremental Rows============================")
-    load_incremental_models_to_warehouse(MD_TOKEN, historical_data_df, webscraped_data_df)
-    logger.info("====> Succesffuly loading incremetal data into the warehouse")
+    #Add BI tools for Tableau and PowerBI to webscrape 
+    #Each BI tools has a different url 
+    tools = ['Tableau', 'PowerBI']
+    for tool in tools:
+        if tool =='Tableau':
+            webscraped_data_df = webscrape_data(url)
+        else:
+            webscraped_data_df = webscrape_data(powerbi_url)
+
+        #========================================================================
+        logger.info(f"====> Finish Webscraping {tool} Data!")
+        logger.info("====================Start Transforming Data============================")
+        webscraped_data_df = transform_webscrape_data(webscraped_data_df,tool)
+        logger.info(f"====> Finish Transforming the {tool} Webscraped Data!")
+        # print("historical data here: ")
+        # print(historical_data_df.head())
+
+        print("===================================================")
+        print("webscraped data after transformation here: ")
+        print(webscraped_data_df.head())
+
+        # print("Incremental models. Load data into warehouse:")
+        logger.info("====================Start Checking Incremental Rows============================")
+        load_incremental_models_to_warehouse(MD_TOKEN, historical_data_df, webscraped_data_df, tool)
+        logger.info(f"====> Succesffuly loading {tool} incremetal data into the warehouse")
 
     data_from_wh_df = return_data_from_warehouse(MD_TOKEN)
     print("===================================================")
