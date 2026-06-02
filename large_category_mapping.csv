@@ -102,3 +102,30 @@ Dates,Date Time
 Fiscal Date,Date Time
 Time,Date Time
 Year Over Year,Date Time
+"Advanced, Custom Visual",Advanced
+"Advanced, Html",Advanced
+Deneb,Intermediate
+Intermediate,Intermediate
+"Formatting, Intermediate",Intermediate
+"Custom Visual, Intermediate",Intermediate
+"Dynamic Annotation, Intermediate",Intermediate
+"Bar Chart, Intermediate",Intermediate
+"Filters, Intermediate",Intermediate
+"Deneb, Intermediate",Intermediate
+"Beginner, Intermediate",Intermediate
+"Sankey, Intermediate",Intermediate
+"Tree Map, Beginner",Beginner
+"Bump Chart, Intermediate",Intermediate
+"Scatterplot, Intermediate",Intermediate
+"Waffle Chart, Intermediate",Intermediate
+"Area Chart, Intermediate",Intermediate
+"Ribbon Chart, Advanced",Advanced
+"Survey, Advanced",Advanced
+"Parameter, Beginner",Beginner
+"Waterfall Chart, Beginner",Beginner
+"Dumbbell Chart, Beginner",Beginner
+Page Navigation,Beginner
+Sparklines,Beginner
+"Map, Beginner",Beginner
+"DateTime, Intermediate",Intermediate
+"Bump Chart, Intermediate",Intermediate

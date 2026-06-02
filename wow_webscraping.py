@@ -290,8 +290,6 @@ def main():
         logger.info("====================Start Transforming Data============================")
         webscraped_data_df = transform_webscrape_data(webscraped_data_df,tool)
         logger.info(f"====> Finish Transforming the {tool} Webscraped Data!")
-        # print("historical data here: ")
-        # print(historical_data_df.head())
 
         print("===================================================")
         print("webscraped data after transformation here: ")
