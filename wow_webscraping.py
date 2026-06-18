@@ -86,8 +86,8 @@ def historic_data(MD_TOKEN):
     con = duckdb.connect('md:?motherduck_token=' + MD_TOKEN)
     his_df = con.sql("SELECT * FROM wow_data.wow_historic_data ORDER BY Year DESC, Week DESC").df()
     con.close()
-    his_df['Year_Week'] = his_df['Year'].astype(str) +  his_df['Week'].astype(str).str.zfill(2)
-    his_df['Year_Week'] = his_df['Year_Week'].astype(int)
+    # his_df['Year_Week'] = his_df['Year'].astype(str) +  his_df['Week'].astype(str).str.zfill(2)
+    # his_df['Year_Week'] = his_df['Year_Week'].astype(int)
     return his_df
 
 
@@ -112,10 +112,10 @@ def transform_webscrape_data(webscraped_data_df, tool):
     #Create a Year_Week column by concatenating the Year and Week columns, with week number zero-padded to 2 digits
     # webscraped_data_df['Year_Week'] = webscraped_data_df['Year'].astype(str) + webscraped_data_df['Week'].astype(str).str.zfill(2)
     # webscraped_data_df['Year_Week'] = webscraped_data_df['Year_Week'].astype(int)
-    webscraped_data_df['Year_Week'] = (
-        webscraped_data_df['Year'] * 100
-        + webscraped_data_df['Week']
-    ).astype('Int64')
+    # webscraped_data_df['Year_Week'] = (
+    #     webscraped_data_df['Year'] * 100
+    #     + webscraped_data_df['Week']
+    # ).astype('Int64')
     
     column_rename_mapping = {
     'title': 'Title',
@@ -128,7 +128,7 @@ def transform_webscrape_data(webscraped_data_df, tool):
 
     webscraped_data_df['posted_date'] = pd.to_datetime(webscraped_data_df['posted_date'])
     #Order columns to match with the historical data
-    webscraped_data_df = webscraped_data_df[['Category', 'Link', 'Title','posted_date','Year', 'Week', 'Author','author_url',  'Year_Week','BI_tools']]
+    webscraped_data_df = webscraped_data_df[['Category', 'Link', 'Title','posted_date','Year', 'Week', 'Author','author_url',  'BI_tools']]
     rules = {
         'Interactivity':'#Interactivity|Interactivity',
         'Map Layer': '#Maplayers|Map Layers',
@@ -152,11 +152,22 @@ def transform_webscrape_data(webscraped_data_df, tool):
 
 def load_incremental_models_to_warehouse(MD_TOKEN,historical_data_df, webscraped_data_df, tool):
     historical_data_df = historical_data_df[historical_data_df['BI_tools'] == tool]
-    max_year_week = historical_data_df['Year_Week'].max()
-    webscraped_data_df = webscraped_data_df[webscraped_data_df['Year_Week'] > max_year_week]
-    webscraped_data_df = webscraped_data_df.drop(columns=['Year_Week']).reset_index(drop=True)
+    historical_title_hash = set(pd.util.hash_pandas_object(historical_data_df['Title'], index=False))
+
+    #max_year_week = historical_data_df['Year_Week'].max()
+
+    webscraped_data_df = webscraped_data_df.head()
+
+    #Use the hash for the title column to identify new rows in the webscraped data that are not in the historical data, and only keep those rows to load into the warehouse. 
+    webscraped_hash = pd.util.hash_pandas_object(webscraped_data_df['Title'], index=False)
+    webscraped_data_df = webscraped_data_df[~webscraped_hash.isin(historical_title_hash)]
+    #webscraped_data_df = webscraped_data_df[(webscraped_data_df['Year_Week'] > max_year_week)]
+
+    # webscraped_data_df = webscraped_data_df.drop(columns=['Year_Week']).reset_index(drop=True)
+    webscraped_data_df = webscraped_data_df.reset_index(drop=True)
     with duckdb.connect('md:?motherduck_token=' + MD_TOKEN) as conn:
         arrow_table = pa.table(webscraped_data_df)
+
         conn.sql("""
                             INSERT INTO wow_data.wow_historic_data
                             SELECT * FROM arrow_table
