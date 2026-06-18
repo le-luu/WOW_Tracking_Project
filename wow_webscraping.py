@@ -104,10 +104,15 @@ def transform_webscrape_data(webscraped_data_df, tool):
     #Extract the year and week number from the url column and convert it to int
     webscraped_data_df['Year'] = webscraped_data_df['url'].str.extract(r'.*(\d{4}).*').astype(int)
     #webscraped_data_df['Week'] = webscraped_data_df['url'].str.extract(r'.*w(\d+)[tab|\/].*').astype(int)
+    
+    webscraped_data_df['posted_date'] = pd.to_datetime(webscraped_data_df['posted_date'])
+    week_num = webscraped_data_df['posted_date'].dt.isocalendar().week.astype('Int64')
+    #If the week number is null, then extract the week number from the url, otherwise use the week number from the posted_date column
     webscraped_data_df['Week'] = (
         webscraped_data_df['url']
         .str.extract(r'w(\d+)(?:tab|/)', expand=False)
         .astype('Int64')
+        .fillna(week_num)
     )
     #Create a Year_Week column by concatenating the Year and Week columns, with week number zero-padded to 2 digits
     # webscraped_data_df['Year_Week'] = webscraped_data_df['Year'].astype(str) + webscraped_data_df['Week'].astype(str).str.zfill(2)
@@ -126,7 +131,7 @@ def transform_webscrape_data(webscraped_data_df, tool):
     #Drop some columns to match with the historical data
     webscraped_data_df.drop(columns=['categories','title_attribute'], inplace=True)
 
-    webscraped_data_df['posted_date'] = pd.to_datetime(webscraped_data_df['posted_date'])
+    # webscraped_data_df['posted_date'] = pd.to_datetime(webscraped_data_df['posted_date'])
     #Order columns to match with the historical data
     webscraped_data_df = webscraped_data_df[['Category', 'Link', 'Title','posted_date','Year', 'Week', 'Author','author_url',  'BI_tools']]
     rules = {
